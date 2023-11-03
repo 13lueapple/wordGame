@@ -1,0 +1,32 @@
+import re, os
+def convert_to_dictionary(sentence):
+    """
+    영어 단어와 한국어 뜻을 딕셔너리로 변환하는 함수
+
+    Args:
+        sentence: 영어 단어와 한국어 뜻이 포함된 문장
+
+    Returns:
+        영어 단어와 한국어 뜻을 포함하는 딕셔너리
+    """
+
+    # 영어 단어와 한국어 뜻을 구분하는 정규 표현식
+    regex = r"(.+?) - (.*)"
+
+    # 문장을 정규 표현식으로 분리
+    matches = re.findall(regex, sentence)
+
+    # 딕셔너리를 생성
+    dictionary = {}
+    for match in matches:
+        dictionary[match[0]] = match[1].replace(" (.*)", "")
+
+    return dictionary
+
+
+# 테스트
+with open(os.path.join(__file__, "../Word.txt"), "r", encoding="utf-8") as f:
+    sentence = f.read()
+dictionary = convert_to_dictionary(sentence)
+
+print(dictionary)
