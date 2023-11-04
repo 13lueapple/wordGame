@@ -1,11 +1,12 @@
 import pygame, os, sys
-from utils import buttonDraw
-from main import display, WIDTH, HEIGHT
+from utils import button
 pygame.init()
 
 class menu:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, display: pygame.Surface, displaySize: tuple) -> None:
+        self.display = display
+        self.WIDTH, self.HEIGHT = displaySize
+        
     def run(self):
         self.click = False
         for event in pygame.event.get():
@@ -15,34 +16,44 @@ class menu:
                 if event.button == 1:
                     self.click = True
                     
+        self.mPos = pygame.mouse.get_pos()
+        self.display.fill((0,0,0))
+                    
+                    
+                    
 class levelMenu(menu):
-    def __init__(self):
-        pass
+    def __init__(self, display, displaySize):
+        super().__init__(display, displaySize)
+        self.buttonList = [
+            [button('Map 1'), 'stage1'], #버튼, 버튼을 눌렀을 때 실행할 것의 이름
+            [button('Map 2'), 'mainMenu'],
+            [button('Map 3'), 'mainMenu'],
+            [button('Back'), 'mainMenu']
+        ]
     
     def run(self):
         super().run()
         
-        display.fill((0,0,0))
+        for index, (button, func) in enumerate(self.buttonList):
+            button.draw((self.WIDTH//2 - button.getSize()[0]//2, 100 + (index * button.getSize()[1])), self.display)
+            button.check(self.mPos, self.click, func)
 
-        mPos = pygame.mouse.get_pos()
-        buttonDraw('Map 1', (30,30), mPos, self.click, display, "stage1")
-        buttonDraw('Map 2', (30,100), mPos, self.click, display, "mainMenu")
-        buttonDraw('Map 3', (30,170), mPos, self.click, display, "mainMenu")
-        buttonDraw('Back', (30,240), mPos, self.click, display, "mainMenu")
-        
         pygame.display.update()
 
 class mainMenu(menu):
-    def __init__(self):
-        pass
-    
+    def __init__(self, display, displaySize):
+        super().__init__(display, displaySize)
+        self.buttonList = [
+            [button('Play'), 'levelMenu'],
+            [button('Exit'), 'exitGame']
+        ]
+        
+        
     def run(self):
         super().run()
     
-        display.fill((0,0,0))
-
-        mPos = pygame.mouse.get_pos()
-        buttonDraw('Play', (30,30), mPos, self.click, display, "levelMenu")
-        buttonDraw('Exit', (30,100), mPos, self.click, display, "exit")
+        for index, (button, func) in enumerate(self.buttonList):
+            button.draw((self.WIDTH//2 - button.getSize()[0]//2, 100 + (index * button.getSize()[1])), self.display)
+            button.check(self.mPos, self.click, func)
         
         pygame.display.update()
