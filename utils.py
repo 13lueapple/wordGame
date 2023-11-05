@@ -5,9 +5,6 @@ def fileDir(relativeDir: str):
     return os.path.join(__file__, relativeDir)
 
 class exitGame:
-    def __init__(self) -> None:
-        pass
-    
     def run(self):
         sys.exit()
 
