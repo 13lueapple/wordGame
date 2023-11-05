@@ -5,13 +5,16 @@ from utils import button, fileDir
 englishWord = ['a','b','c']
 
 pygame.init()
+        
 
-class stageMaster:
+class stage:
     def __init__(self, display: pygame.Surface, displaySize: tuple) -> None:
-        self.wordBlockList = []
         self.display = display
         self.WIDTH, self.HEIGHT = displaySize
-    
+        self.buttonList = [
+            [button('뒤로가기'), 'mainMenu']
+        ]
+        
     def run(self):
         self.click = False
         self.text = None
@@ -29,16 +32,6 @@ class stageMaster:
 
         self.display.fill((0,0,0))
         self.mPos = pygame.mouse.get_pos()
-
-class stage1(stageMaster):
-    def __init__(self, display, displaySize) -> None:
-        super().__init__(display, displaySize)
-        self.buttonList = [
-            [button('Back'), 'levelMenu']
-        ]
-        
-    def run(self):
-        super().run()
         
         for index, (button, func) in enumerate(self.buttonList):
             button.draw((self.WIDTH//2 - button.getSize()[0]//2-500, 800 + (index * button.getSize()[1])), self.display)

@@ -21,21 +21,18 @@ class menu:
                     
                     
                     
-class levelMenu(menu):
+class howToPlay(menu):
     def __init__(self, display, displaySize):
         super().__init__(display, displaySize)
         self.buttonList = [
-            [button('Map 1'), 'stage1'], #버튼, 버튼을 눌렀을 때 실행할 것의 이름
-            [button('Map 2'), 'mainMenu'],
-            [button('Map 3'), 'mainMenu'],
-            [button('Back'), 'mainMenu']
+            [button('뒤로가기'), 'mainMenu']
         ]
     
     def run(self):
         super().run()
         
         for index, (button, func) in enumerate(self.buttonList):
-            button.draw((self.WIDTH//2 - button.getSize()[0]//2, 100 + (index * button.getSize()[1])), self.display)
+            button.draw((self.WIDTH//2 - button.getSize()[0]//2, 600 + (index * button.getSize()[1])), self.display)
             button.check(self.mPos, self.click, func)
 
         pygame.display.update()
@@ -44,8 +41,9 @@ class mainMenu(menu):
     def __init__(self, display, displaySize):
         super().__init__(display, displaySize)
         self.buttonList = [
-            [button('Play'), 'levelMenu'],
-            [button('Exit'), 'exitGame']
+            [button('시작하기'), 'stage'],
+            [button('게임방법'), 'howToPlay'],
+            [button('나가기'), 'exitGame']
         ]
         
         
