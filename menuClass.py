@@ -1,31 +1,34 @@
 import pygame, os, sys
-from utils import button
+from utils import Button, fileDir, baseloop
 pygame.init()
-
-class menu:
-    def __init__(self, display: pygame.Surface, displaySize: tuple) -> None:
-        self.display = display
-        self.WIDTH, self.HEIGHT = displaySize
+        
+class GameOver(baseloop):
+    def __init__(self, gameSetting, stateMachine) -> None:
+        super().__init__(gameSetting, stateMachine)
+        self.font = pygame.font.Font(fileDir("../Galmuri11.ttf"), 90)
+        self.buttonList = [
+            [Button('뒤로가기'), 'MainMenu']
+        ]
         
     def run(self):
-        self.click = False
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    self.click = True
+        super().run()
+        self.fontSurface = self.font.render(f"Game Over", False, pygame.Color('red'))
+        self.display.blit(self.fontSurface, (self.WIDTH//2 - self.fontSurface.get_size()[0]//2, self.HEIGHT//2 - self.fontSurface.get_size()[1]//2))
+        
+        for index, (button, func) in enumerate(self.buttonList):
+            button.draw((self.WIDTH//2 - button.getSize()[0]//2, 600 + (index * button.getSize()[1])), self.display)
+            button.check(self.stateMachine, self.mPos, self.click, func)
+            
+        pygame.display.update()
+        
                     
-        self.mPos = pygame.mouse.get_pos()
-        self.display.fill((0,0,0))
                     
                     
-                    
-class howToPlay(menu):
-    def __init__(self, display, displaySize):
-        super().__init__(display, displaySize)
+class HowToPlay(baseloop):
+    def __init__(self, gameSetting, stateMachine):
+        super().__init__(gameSetting, stateMachine)
         self.buttonList = [
-            [button('뒤로가기'), 'mainMenu']
+            [Button('뒤로가기'), 'MainMenu']
         ]
     
     def run(self):
@@ -33,17 +36,17 @@ class howToPlay(menu):
         
         for index, (button, func) in enumerate(self.buttonList):
             button.draw((self.WIDTH//2 - button.getSize()[0]//2, 600 + (index * button.getSize()[1])), self.display)
-            button.check(self.mPos, self.click, func)
+            button.check(self.stateMachine, self.mPos, self.click, func)
 
         pygame.display.update()
 
-class mainMenu(menu):
-    def __init__(self, display, displaySize):
-        super().__init__(display, displaySize)
+class MainMenu(baseloop):
+    def __init__(self, gameSetting, stateMachine):
+        super().__init__(gameSetting, stateMachine)
         self.buttonList = [
-            [button('시작하기'), 'stage'],
-            [button('게임방법'), 'howToPlay'],
-            [button('나가기'), 'exitGame']
+            [Button('시작하기'), {"state" : "Stage", "refresh" : "Stage"}],
+            [Button('게임방법'), 'HowToPlay'],
+            [Button('나가기'), 'ExitGame']
         ]
         
         
@@ -52,6 +55,6 @@ class mainMenu(menu):
     
         for index, (button, func) in enumerate(self.buttonList):
             button.draw((self.WIDTH//2 - button.getSize()[0]//2, 100 + (index * button.getSize()[1])), self.display)
-            button.check(self.mPos, self.click, func)
-        
+            button.check(self.stateMachine, self.mPos, self.click, func)
+                    
         pygame.display.update()

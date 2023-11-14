@@ -1,26 +1,31 @@
 import pygame
-from utils import stateMachine, exitGame
-from stageClass import stage
-from menuClass import mainMenu, howToPlay
+from utils import StateMachine, ExitGame
+from stageClass import Stage
+from menuClass import MainMenu, HowToPlay, GameOver
 pygame.init()
 
 WIDTH, HEIGHT = 1200, 900
 display = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
+gameSetting = {
+    "display" : display,
+    "size" : (WIDTH, HEIGHT),
+    "clock" : clock
+}
 
-stateMachine.init(
-    {
-        'mainMenu': mainMenu(display, (WIDTH, HEIGHT)),
-        'howToPlay': howToPlay(display, (WIDTH, HEIGHT)),
-        'exitGame': exitGame(),
-        'stage': stage(display, (WIDTH, HEIGHT))
-    }
-    
-)
-stateMachine.set("mainMenu")
+stateMachine = StateMachine()
+stateMachine.init({
+        'MainMenu': MainMenu(gameSetting, stateMachine),
+        'HowToPlay': HowToPlay(gameSetting, stateMachine),
+        'ExitGame': ExitGame(),
+        'Stage': Stage(gameSetting, stateMachine),
+        'GameOver': GameOver(gameSetting, stateMachine)
+    })
+
+stateMachine.set("MainMenu")
+
 while True:
-    clock.tick(60)
     pygame.display.set_caption('fps : ' + str(round(clock.get_fps())))
     stateMachine.run()
 
