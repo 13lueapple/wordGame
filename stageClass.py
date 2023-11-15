@@ -22,11 +22,12 @@ class Stage(baseloop):
             button.draw((self.WIDTH//2 - button.getSize()[0]//2-500, 800 + (index * button.getSize()[1])), self.display)
             button.check(self.stateMachine, self.mPos, self.click, func)
         
+        
         self.wordList.draw(self.dt)
         success = self.checkWordTyping.drawAndCheck(self.display, self.WIDTH, self.HEIGHT, self.text, self.key)
         for i, v in enumerate(self.wordList.wordList[0]):
             if v.checking == success:
-                self.wordList.wordList[0].pop(i)
+                self.wordList.wordList[0][i].changeBlank()
             
         
         pygame.display.update()
@@ -58,11 +59,16 @@ class WordList:
         
 class Word:
     def __init__(self, word: tuple):
+        self.die = False
         self.font = pygame.font.Font(fileDir("../Galmuri11.ttf"), 25)
         self.word = word[0] + '\n' + word[1]
         self.checking = word[0]
         self.surface = self.font.render(self.word, False, (255,255,255))
         self.size = self.surface.get_size()[0], self.surface.get_size()[1]
+    
+    def changeBlank(self):
+        self.die = True
+        self.surface = pygame.Surface((1,1))
     
 # class BlankWord:
 #     def __init__(self, size) -> None:
