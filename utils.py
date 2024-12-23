@@ -2,7 +2,8 @@ import pygame, os, sys
 pygame.init()
 
 def fileDir(relativeDir: str):
-    return os.path.join(__file__, relativeDir)
+    # return os.path.join(__file__, relativeDir)
+    return os.path.join(os.path.dirname(__file__), relativeDir)
 
 def list_chunk(lst, n):
     return [lst[i:i+n] for i in range(0, len(lst), n)]
@@ -57,7 +58,7 @@ class StateMachine:
 class Button:
     def __init__(self, name, fg=(255,255,255)) -> None:
         self.name = name
-        self.font = pygame.font.Font(fileDir("../Galmuri11.ttf"), 40)
+        self.font = pygame.font.Font(fileDir("Galmuri11.ttf"), 40)
         self.surface = self.font.render(self.name, False, fg)
         
     def draw(self, pos, display):
@@ -77,7 +78,7 @@ class Button:
     
     
     
-def gradientColorTextRender(text: str, font: pygame.Font, fcolor: list):
+def gradientColorTextRender(text: str, font: pygame.font, fcolor: list):
     """
     fcolor는 반드시 pygame.Color(색상)을 두개 이상!!
     text는 두줄까지만 표시

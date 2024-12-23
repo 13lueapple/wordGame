@@ -2,7 +2,6 @@ import pygame
 from utils import StateMachine, ExitGame
 from stageClass import Stage, GameOver
 from menuClass import MainMenu
-import asyncio
 
 pygame.init()
 
@@ -26,14 +25,12 @@ stateMachine.state["GameOver"] = GameOver(gameSetting, stateMachine, stateMachin
 
 stateMachine.set("MainMenu")
 
-async def main():
+def main():
     while True:
         pygame.display.set_caption('fps : ' + str(round(clock.get_fps())))
         stateMachine.run()
-        await asyncio.sleep(0)
         
-asyncio.run(main())
-
+main()
 
 
 

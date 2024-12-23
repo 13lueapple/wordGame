@@ -13,8 +13,8 @@ class MainMenu(baseloop):
             [Button('나가기'), 'ExitGame']
         ]
         
-        self.titleFont = pygame.font.Font(fileDir("../Galmuri11.ttf"), 100)
-        self.title = gradientColorTextRender("제목뭐하지", self.titleFont, (pygame.Color("gold"), pygame.Color("goldenrod4")))
+        self.titleFont = pygame.font.Font(fileDir("Galmuri11.ttf"), 100)
+        self.title = gradientColorTextRender("게임", self.titleFont, (pygame.Color("gold"), pygame.Color("goldenrod4")))
         
     def run(self):
         super().run()
