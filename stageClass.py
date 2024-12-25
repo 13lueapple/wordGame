@@ -1,5 +1,5 @@
 import pygame, random
-from utils import Button, fileDir, list_chunk, baseloop, gradientColorTextRender
+from utils import Button, fileDir, baseloop, gradientColorTextRender
 from word import englishWord
 
 pygame.init()
@@ -54,14 +54,12 @@ class Stage(baseloop):
         self.score = 0
         self.scoreFont = pygame.font.Font(fileDir("Galmuri11.ttf"), 35)
         
-        self.speed = 60
-        
         self.wordList.spawn()
-        
         
     def run(self):
         super().run()
         success = self.checkWordTyping.drawAndCheck(self.display, self.WIDTH, self.HEIGHT, self.text, self.key)
+
         for i, v in enumerate(self.wordList.wordList):
             if v.checking == success:
                 del self.wordList.wordList[i]
@@ -75,14 +73,11 @@ class Stage(baseloop):
             self.abilityElapsedTime = (pygame.time.get_ticks() - self.abilityStartTime) / 1000
             if self.abilityElapsedTime < 2:
                     self.speed = 20
-            else: self.speed = 60
+                
         except:
             pass
                             
-        
-        
         self.wordList.draw(self.dt, self.speed)
-        print(self.dt)
             
         self.elapsedTime = (pygame.time.get_ticks() - self.startTime) / 1000
         if round(self.counter - self.elapsedTime) == 0:
@@ -99,7 +94,6 @@ class Stage(baseloop):
         self.display.blit(self.scoreFont.render(f"점수 : {str(self.score)}", False, pygame.Color("grey50")), (self.WIDTH - 300, self.HEIGHT - 50))
         
         pygame.display.update()
-        
 
 class GameOver(baseloop):
     def __init__(self, gameSetting, stateMachine, StageInstance) -> None:
@@ -177,12 +171,6 @@ class Word:
         self.checking = word[0]
         self.surface: pygame.Surface = self.font.render(self.word, True, (255,255,255))
         self.size = self.surface.get_size()[0], self.surface.get_size()[1]
-        self.ignore = False
-    
-    # def changeBlank(self):
-    #     self.ignore = True
-    #     self.surface = pygame.Surface(self.size)
-    #     self.surface.set_colorkey(pygame.Color('black'))
     
 class SpecialWord(Word):
     def __init__(self, word, font):
@@ -191,7 +179,6 @@ class SpecialWord(Word):
         self.checking = word.split("\n")[0]
         self.surface = self.font.render(self.word, True, (255,255,255))
         self.size = self.surface.get_size()[0], self.surface.get_size()[1]
-        self.ignore = False
         self.specialAbility = [
             {"ability" : "timePlus", "color" : (pygame.Color("blue"), pygame.Color("red"))},
             {"ability" : "slowWord", "color" : (pygame.Color("gold"), pygame.Color("goldenrod4"))},

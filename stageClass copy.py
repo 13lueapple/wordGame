@@ -1,5 +1,5 @@
 import pygame, random
-from utils import Button, fileDir, list_chunk, baseloop, gradientColorTextRender
+from utils import Button, fileDir, baseloop, gradientColorTextRender
 from word import englishWord
 
 pygame.init()
@@ -13,7 +13,7 @@ class Stage(baseloop):
         ]
     
     def init(self):
-        self.wordList = WordList(self.display, self.HEIGHT, self.stateMachine)
+        self.wordList = WordList(self.display, self.WIDTH, self.HEIGHT, self.stateMachine)
         self.checkWordTyping = CheckWordTyping()
 
         self.running = 1
@@ -54,32 +54,36 @@ class Stage(baseloop):
         self.score = 0
         self.scoreFont = pygame.font.Font(fileDir("Galmuri11.ttf"), 35)
         
-        self.speed = 20
+        
+        self.wordList.spawn()
         
         
     def run(self):
         super().run()
         success = self.checkWordTyping.drawAndCheck(self.display, self.WIDTH, self.HEIGHT, self.text, self.key)
-        for n in range(15):
-            for i, v in enumerate(self.wordList.wordList[n]):
-                if v.checking == success:
-                    self.wordList.wordList[n][i].changeBlank()
-                    self.score += 100
-                    if type(v) == SpecialWord:
-                        if v.ability['ability'] == "timePlus":
-                            self.counter += 2
-                        if v.ability['ability'] == "slowWord":
-                            self.abilityStartTime = pygame.time.get_ticks()
+        self.speed = 60
+
+        for i, v in enumerate(self.wordList.wordList):
+            if v.checking == success:
+                del self.wordList.wordList[i]
+                self.score += 100
+                if type(v) == SpecialWord:
+                    if v.ability['ability'] == "timePlus":
+                        self.counter += 2
+                    if v.ability['ability'] == "slowWord":
+                        self.abilityStartTime = pygame.time.get_ticks()
         try:               
             self.abilityElapsedTime = (pygame.time.get_ticks() - self.abilityStartTime) / 1000
-            if self.abilityElapsedTime < 3:
-                    self.speed = 5
-            else: self.speed = 17
+            if self.abilityElapsedTime < 2:
+                    self.speed = 20
+                
         except:
             pass
-                    
-                    
+                            
+
+        
         self.wordList.draw(self.dt, self.speed)
+        print(self.dt)
             
         self.elapsedTime = (pygame.time.get_ticks() - self.startTime) / 1000
         if round(self.counter - self.elapsedTime) == 0:
@@ -96,7 +100,6 @@ class Stage(baseloop):
         self.display.blit(self.scoreFont.render(f"점수 : {str(self.score)}", False, pygame.Color("grey50")), (self.WIDTH - 300, self.HEIGHT - 50))
         
         pygame.display.update()
-        
 
 class GameOver(baseloop):
     def __init__(self, gameSetting, stateMachine, StageInstance) -> None:
@@ -123,58 +126,57 @@ class GameOver(baseloop):
         
         
 class WordList:
-    def __init__(self, display: pygame.Surface, HEIGHT, stateMachine) -> None:
+    def __init__(self, display: pygame.Surface,WIDTH, HEIGHT, stateMachine) -> None:
         self.wordFont = pygame.font.Font(fileDir("Galmuri11.ttf"), 23)
         self.tempEnglishWordList = list(englishWord.items())
         random.shuffle(self.tempEnglishWordList)
         self.tempWordList = [Word(i, self.wordFont) for i in self.tempEnglishWordList]
-        self.tempWordIndexes = list(random.sample(range(len(self.tempWordList)), 240))
-        self.tempWordIndexes = [self.tempWordIndexes[:150], self.tempWordIndexes[150:]]
-        for index in self.tempWordIndexes[0]:
-            self.tempWordList[index].changeBlank()
-            
-        for index in self.tempWordIndexes[1]:
+        self.tempWordIndexes = list(random.sample(range(len(self.tempWordList)), 90))
+        
+        for index in self.tempWordIndexes:
             self.tempWord = self.tempWordList[index].word
             self.tempWordList[index] = SpecialWord(self.tempWord, self.wordFont)
         
-        self.wordList = list_chunk(self.tempWordList, 4)
-        self.x, self.y = 0, 0
+        self.wordList = self.tempWordList
         self.display = display
+        self.WIDTH = WIDTH
         self.HEIGHT = HEIGHT
         self.stateMachine = stateMachine
         
+        self.wordDrawSurfaceWidth = self.WIDTH - max(x.size[0] for x in self.wordList)
+        self.wordDrawSurfaceHeight = (max(x.size[0] for x in self.wordList) + 10) * (len(self.wordList)//4)//2
+    
+    def spawn(self):
+        self.existingRects = []
+        for word in self.wordList:
+            while True:
+                self.tx = random.randint(0, self.wordDrawSurfaceWidth)
+                self.ty = -random.randint(0, self.wordDrawSurfaceHeight)
+                self.newRect = pygame.Rect(self.tx, self.ty, word.size[0], word.size[1])
+                
+                if not any(self.newRect.colliderect(existingRect) for existingRect in self.existingRects):
+                    self.existingRects.append(self.newRect)
+                    word.x, word.y = self.tx, self.ty
+                    break
+
+        
     def draw(self, dt, speed):
-        self.rX, self.rY = 0,0
-        for i in self.wordList:
-            for j in i:
-                self.display.blit(j.surface, (self.x + self.rX, self.y + self.rY))
-                self.rX += j.size[0] + 30
-            self.rX = 0
-            self.rY -= j.size[1] + 40
-            
-        if self.y >= self.HEIGHT - 130:
-            if [self.wordList[0][0].ignore, self.wordList[0][1].ignore, self.wordList[0][2].ignore, self.wordList[0][3].ignore] == [True, True, True, True]:
-                del self.wordList[0]
-                self.y -= self.wordList[0][3].size[1] + 40 
-            else:   
+        for word in self.wordList:
+            self.display.blit(word.surface, (word.x, word.y))
+            if word.y >= self.HEIGHT - 130:  
                 self.stateMachine.set("GameOver")
-        elif dt < 0.1 : self.y += speed*dt
+            elif dt < 0.1 : word.y += speed*dt
         
         
         
 class Word:
     def __init__(self, word: tuple, font):
+        self.x, self.y = None, None
         self.font = font
         self.word = f'{word[0]}\n{word[1]}'
         self.checking = word[0]
-        self.surface = self.font.render(self.word, True, (255,255,255))
+        self.surface: pygame.Surface = self.font.render(self.word, True, (255,255,255))
         self.size = self.surface.get_size()[0], self.surface.get_size()[1]
-        self.ignore = False
-    
-    def changeBlank(self):
-        self.ignore = True
-        self.surface = pygame.Surface(self.size)
-        self.surface.set_colorkey(pygame.Color('black'))
     
 class SpecialWord(Word):
     def __init__(self, word, font):
@@ -183,7 +185,6 @@ class SpecialWord(Word):
         self.checking = word.split("\n")[0]
         self.surface = self.font.render(self.word, True, (255,255,255))
         self.size = self.surface.get_size()[0], self.surface.get_size()[1]
-        self.ignore = False
         self.specialAbility = [
             {"ability" : "timePlus", "color" : (pygame.Color("blue"), pygame.Color("red"))},
             {"ability" : "slowWord", "color" : (pygame.Color("gold"), pygame.Color("goldenrod4"))},

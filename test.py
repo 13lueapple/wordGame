@@ -1,59 +1,63 @@
-import pygame
-import random
+import numpy as np
+import matplotlib.pyplot as plt
 
-# 초기 설정
-pygame.init()
-screen_width, screen_height = 800, 600
-screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Non-Overlapping Rectangles")
-clock = pygame.time.Clock()
+class DifficultyAdjuster:
+    def __init__(self, a, b, c, d):
+        # 삼차함수 계수: f(x) = ax^3 + bx^2 + cx + d
+        self.a = a
+        self.b = b
+        self.c = c
+        self.d = d
+        self.previous_score = None
 
-# 색상 정의
-WHITE = (255, 255, 255)
-BLUE = (0, 0, 255)
+    def cubic_function(self, x):
+        """삼차함수 f(x) 계산."""
+        return self.a * x**3 + self.b * x**2 + self.c * x + self.d
 
-# 직사각형 정보
-rects = []
-rect_width, rect_height = 50, 50
-max_rects = 100  # 최대 생성할 직사각형 수
+    def average_rate_of_change(self, x1, x2):
+        """평균 변화율 계산."""
+        if x1 == x2:
+            return 0  # x1과 x2가 같으면 변화율이 0
+        f_x1 = self.cubic_function(x1)
+        f_x2 = self.cubic_function(x2)
+        return (f_x2 - f_x1) / (x2 - x1)
 
-def create_non_overlapping_rect(existing_rects, max_attempts=100):
-    """
-    겹치지 않는 직사각형을 생성합니다.
-    :param existing_rects: 기존 직사각형 리스트
-    :param max_attempts: 위치를 찾기 위한 최대 시도 횟수
-    :return: 새로운 직사각형(Rect 객체) 또는 None(실패 시)
-    """
-    for _ in range(max_attempts):
-        x = random.randint(0, screen_width - rect_width)
-        y = random.randint(0, screen_height - rect_height)
-        new_rect = pygame.Rect(x, y, rect_width, rect_height)
+    def adjust_difficulty(self, current_score):
+        """현재 점수를 기반으로 난이도 조정."""
+        if self.previous_score is None:
+            # 초기 상태에서는 난이도를 기본값으로 설정
+            self.previous_score = current_score
+            return self.cubic_function(current_score)
 
-        # 기존 직사각형과 겹치는지 확인
-        if not any(new_rect.colliderect(existing_rect) for existing_rect in existing_rects):
-            return new_rect
-    return None  # 적합한 위치를 찾지 못한 경우
+        # 평균 변화율 계산
+        rate_of_change = self.average_rate_of_change(self.previous_score, current_score)
+        
+        # 난이도 조정 값 업데이트
+        difficulty = self.cubic_function(current_score) + rate_of_change
 
-# 메인 루프
-running = True
-while running:
-    screen.fill(WHITE)
+        # 상태 업데이트
+        self.previous_score = current_score
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+        # 난이도 값 반환
+        return max(1, difficulty)  # 난이도는 최소 1로 제한
 
-    # 직사각형 생성
-    if len(rects) < max_rects:
-        new_rect = create_non_overlapping_rect(rects)
-        if new_rect:
-            rects.append(new_rect)
+# 난이도 조절기 초기화 (삼차함수 계수 설정)
+adjuster = DifficultyAdjuster(a=0.01, b=-0.1, c=0.5, d=5)
 
-    # 직사각형 그리기
-    for rect in rects:
-        pygame.draw.rect(screen, BLUE, rect)
+# 예시 점수 데이터 (플레이어의 점수)
+scores = [10, 15, 20, 25, 30, 35, 40]
 
-    pygame.display.flip()
-    clock.tick(30)
+difficulties = []
+for score in scores:
+    difficulty = adjuster.adjust_difficulty(score)
+    difficulties.append(difficulty)
+    print(f"Score: {score}, Adjusted Difficulty: {difficulty:.2f}")
 
-pygame.quit()
+# 결과 시각화
+plt.plot(scores, difficulties, marker='o', label='Difficulty')
+plt.xlabel('Score')
+plt.ylabel('Difficulty')
+plt.title('Real-time Difficulty Adjustment')
+plt.legend()
+plt.grid()
+plt.show()
