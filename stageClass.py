@@ -1,6 +1,7 @@
 import pygame, random
 from utils import Button, fileDir, baseloop, gradientColorTextRender
 from word import englishWord
+import numpy as np
 
 pygame.init()
         
@@ -11,7 +12,7 @@ class Stage(baseloop):
         self.buttonList = [
             [Button('뒤로가기'), 'MainMenu']
         ]
-    
+        
     def init(self):
         self.wordList = WordList(self.display, self.WIDTH, self.HEIGHT, self.stateMachine)
         self.checkWordTyping = CheckWordTyping()
@@ -56,9 +57,54 @@ class Stage(baseloop):
         
         self.wordList.spawn()
         
+        self.scoreStartTime = pygame.time.get_ticks()
+        self.prevScore = 0
+        self.difficulty = 1
+
+        self.currentSpeed = 0
+        self.targetSpeed = 0
+        self.scoreGraphY = []
+        
+    
+    def difficultyAdjustment(self):
+
+        self.scoreDeltaTime = (pygame.time.get_ticks() - self.scoreStartTime) / 1000
+        if self.scoreDeltaTime > 1:
+            self.scoreGraphY.append(self.score)
+            self.nextScore = self.score
+            self.deltaScore = self.nextScore - self.prevScore
+            if self.deltaScore != 0:
+                self.difficulty += self.deltaScore / 500
+            else:
+                if self.difficulty > 1:
+                    self.difficulty -= 0.05
+                else:
+                    self.difficulty = 1
+            self.prevScore = self.nextScore
+            self.scoreStartTime = pygame.time.get_ticks()
+            # print(self.deltaScore)
+            # print(self.difficulty,"\n")
+            try:
+                y_discrete = np.array(self.scoreGraphY)
+                x_discrete = np.array(range(0, len(y_discrete)))
+                coefficients = np.polyfit(x_discrete, y_discrete, deg=3)
+                polynomial = np.poly1d(coefficients)
+                polynomial_derivative = polynomial.deriv()
+                polynomial_derivative2 = polynomial_derivative.deriv()
+                critical_points = np.roots(polynomial_derivative2)
+                extreme_value = polynomial_derivative(critical_points[0])
+                self.limitAdjuster = extreme_value
+                print(self.limitAdjuster)
+            except:
+                pass
+
     def run(self):
         super().run()
         success = self.checkWordTyping.drawAndCheck(self.display, self.WIDTH, self.HEIGHT, self.text, self.key)
+        self.difficultyAdjustment()
+
+        self.targetSpeed = self.difficulty * 10
+
 
         for i, v in enumerate(self.wordList.wordList):
             if v.checking == success:
@@ -72,12 +118,15 @@ class Stage(baseloop):
         try:               
             self.abilityElapsedTime = (pygame.time.get_ticks() - self.abilityStartTime) / 1000
             if self.abilityElapsedTime < 2:
-                    self.speed = 20
+                self.targetSpeed = self.targetSpeed * 0.5
                 
         except:
             pass
+
+        speedDiff = self.targetSpeed - self.currentSpeed
+        self.currentSpeed += speedDiff * min(self.dt, 1.0)
                             
-        self.wordList.draw(self.dt, self.speed)
+        self.wordList.draw(self.dt, self.currentSpeed)
             
         self.elapsedTime = (pygame.time.get_ticks() - self.startTime) / 1000
         if round(self.counter - self.elapsedTime) == 0:
@@ -96,6 +145,7 @@ class Stage(baseloop):
         pygame.display.update()
 
 class GameOver(baseloop):
+
     def __init__(self, gameSetting, stateMachine, StageInstance) -> None:
         super().__init__(gameSetting, stateMachine)
         self.StageInstance = StageInstance
@@ -115,6 +165,7 @@ class GameOver(baseloop):
         for index, (button, func) in enumerate(self.buttonList):
             button.draw((self.WIDTH//2 - button.getSize()[0]//2, 800 + (index * button.getSize()[1])), self.display)
             button.check(self.stateMachine, self.mPos, self.click, func)
+
             
         pygame.display.update()
         
@@ -145,7 +196,7 @@ class WordList:
         for word in self.wordList:
             while True:
                 self.tx = random.randint(0, self.wordDrawSurfaceWidth)
-                self.ty = -random.randint(0, self.wordDrawSurfaceHeight)
+                self.ty = random.randrange( -self.wordDrawSurfaceHeight, 300)
                 self.newRect = pygame.Rect(self.tx, self.ty, word.size[0], word.size[1])
                 
                 if not any(self.newRect.colliderect(existingRect) for existingRect in self.existingRects):
