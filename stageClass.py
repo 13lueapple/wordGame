@@ -64,7 +64,18 @@ class Stage(baseloop):
         self.currentSpeed = 0
         self.targetSpeed = 0
         self.scoreGraphY = []
-        
+
+    def calculateLimitAdjuster(self):
+        y_discrete = np.array(self.scoreGraphY)
+        x_discrete = np.array(range(0, len(y_discrete)))
+        coefficients = np.polyfit(x_discrete, y_discrete, deg=3)
+        polynomial = np.poly1d(coefficients)
+        polynomial_derivative = polynomial.deriv()
+        polynomial_derivative2 = polynomial_derivative.deriv()
+        critical_points = np.roots(polynomial_derivative2)
+        extreme_value = polynomial_derivative(critical_points[0])
+        with open("limitAdjuster.txt", "w") as f:
+            f.write(str(extreme_value))
     
     def difficultyAdjustment(self):
 
@@ -82,22 +93,9 @@ class Stage(baseloop):
                     self.difficulty = 1
             self.prevScore = self.nextScore
             self.scoreStartTime = pygame.time.get_ticks()
+            print(self.targetSpeed, self.difficulty)
             # print(self.deltaScore)
             # print(self.difficulty,"\n")
-            try:
-                y_discrete = np.array(self.scoreGraphY)
-                x_discrete = np.array(range(0, len(y_discrete)))
-                coefficients = np.polyfit(x_discrete, y_discrete, deg=3)
-                polynomial = np.poly1d(coefficients)
-                polynomial_derivative = polynomial.deriv()
-                polynomial_derivative2 = polynomial_derivative.deriv()
-                critical_points = np.roots(polynomial_derivative2)
-                extreme_value = polynomial_derivative(critical_points[0])
-                self.limitAdjuster = extreme_value
-                print(self.limitAdjuster)
-            except:
-                pass
-
     def run(self):
         super().run()
         success = self.checkWordTyping.drawAndCheck(self.display, self.WIDTH, self.HEIGHT, self.text, self.key)
@@ -126,10 +124,11 @@ class Stage(baseloop):
         speedDiff = self.targetSpeed - self.currentSpeed
         self.currentSpeed += speedDiff * min(self.dt, 1.0)
                             
-        self.wordList.draw(self.dt, self.currentSpeed)
+        self.wordList.draw()
             
         self.elapsedTime = (pygame.time.get_ticks() - self.startTime) / 1000
         if round(self.counter - self.elapsedTime) == 0:
+            self.calculateLimitAdjuster()
             self.stateMachine.set('GameOver')
         
         self.display.blit(self.counterFont.render(f"남은 시간 : {str(round(self.counter - self.elapsedTime))}", False, pygame.Color("red")), (self.WIDTH - 600, self.HEIGHT - 50))
@@ -141,6 +140,12 @@ class Stage(baseloop):
         pygame.draw.rect(self.display, pygame.Color('red'), (0, self.HEIGHT - 80, 2000, 5))
         
         self.display.blit(self.scoreFont.render(f"점수 : {str(self.score)}", False, pygame.Color("grey50")), (self.WIDTH - 300, self.HEIGHT - 50))
+
+        for word in self.wordList.wordList:
+            if word.y >= self.HEIGHT - 130:
+                self.calculateLimitAdjuster()
+                self.stateMachine.set("GameOver")
+            word.y += self.currentSpeed*self.dt
         
         pygame.display.update()
 
@@ -205,12 +210,9 @@ class WordList:
                     break
 
         
-    def draw(self, dt, speed):
+    def draw(self):
         for word in self.wordList:
             self.display.blit(word.surface, (word.x, word.y))
-            if word.y >= self.HEIGHT - 130:  
-                self.stateMachine.set("GameOver")
-            elif dt < 0.1 : word.y += speed*dt
         
         
         
