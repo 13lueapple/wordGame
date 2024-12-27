@@ -65,6 +65,9 @@ class Stage(baseloop):
         self.targetSpeed = 0
         self.scoreGraphY = []
 
+        with open("limitAdjuster.txt", "r") as f:
+            self.limitAdjuster = int(f.read())
+
     def calculateLimitAdjuster(self):
         y_discrete = np.array(self.scoreGraphY)
         x_discrete = np.array(range(0, len(y_discrete)))
@@ -85,7 +88,8 @@ class Stage(baseloop):
             self.nextScore = self.score
             self.deltaScore = self.nextScore - self.prevScore
             if self.deltaScore != 0:
-                self.difficulty += self.deltaScore / 500
+                if self.targetSpeed <= self.limitAdjuster:
+                    self.difficulty += self.deltaScore / 500
             else:
                 if self.difficulty > 1:
                     self.difficulty -= 0.05
@@ -93,14 +97,13 @@ class Stage(baseloop):
                     self.difficulty = 1
             self.prevScore = self.nextScore
             self.scoreStartTime = pygame.time.get_ticks()
-            print(self.targetSpeed, self.difficulty)
+            print(self.targetSpeed, self.difficulty, self.limitAdjuster)
             # print(self.deltaScore)
             # print(self.difficulty,"\n")
     def run(self):
         super().run()
         success = self.checkWordTyping.drawAndCheck(self.display, self.WIDTH, self.HEIGHT, self.text, self.key)
         self.difficultyAdjustment()
-
         self.targetSpeed = self.difficulty * 10
 
 
@@ -122,6 +125,7 @@ class Stage(baseloop):
             pass
 
         speedDiff = self.targetSpeed - self.currentSpeed
+        
         self.currentSpeed += speedDiff * min(self.dt, 1.0)
                             
         self.wordList.draw()
