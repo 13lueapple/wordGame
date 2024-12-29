@@ -23,8 +23,8 @@ y_continuous = polynomial(x_continuous)
 y_derivative = polynomial_derivative(x_continuous)
 
 # 그래프 출력
-plt.plot(x_discrete, y_discrete, 'o', label='Discrete Data')
-plt.plot(x_continuous, y_continuous, '-', label='Cubic Spline Interpolation')
-plt.plot(x_continuous, y_derivative, '--', label='Derivative of Cubic Spline')
+plt.plot(x_discrete, y_discrete, 'o', label='S(t)')
+plt.plot(x_continuous, y_continuous, '-', label='F(t)')
+plt.plot(x_continuous, y_derivative, '--', label='F`(t)')
 plt.legend()
 plt.show()
